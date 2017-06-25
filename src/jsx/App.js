@@ -1,34 +1,82 @@
 /**
         Author: SpringHack - springhack@live.cn
-        Last modified: 2017-06-24 21:49:04
-        Filename: src/jsx/App.js
+        Last modified: 2017-06-25 12:22:30
+        Filename: App.js
         Description: Created by SpringHack using vim automatically.
 **/
 import React, { Component } from 'react';
 import { observer } from 'mobx-react';
-import { NativeModules, AppRegistry, View, Text } from 'react-native';
+import { NativeModules, AppRegistry, ScrollView, Image, View, Text } from 'react-native';
+import { List } from 'antd-mobile';
 
-// import style from '../style';
+import style from '../style';
 
 @observer
 class App extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      packageList: []
+    };
   }
-  async componentDidMount() {
+  componentDidMount() {
+    this.updatePackageList();
+  }
+  async updatePackageList() {
     const { DeviceOwnerManager } = NativeModules;
-    console.log(await DeviceOwnerManager.getPackageList());
+    this.setState({
+      packageList: await DeviceOwnerManager.getPackageList()
+    });
   }
   render() {
     return (
-      <View style={{
-        width: 1000,
-        height: 1000
-      }}>
-        <Text>
-          React Component
-        </Text>
+      <View style={style.outer}>
+        <ScrollView>
+          <List renderHeader={<Text>User</Text>}>
+            {
+              this.state.packageList
+              .filter(p => !p.systemApp)
+              .sort((x, y) => (x.appName.localeCompare(y.appName)))
+              .map(pack => (
+                <List.Item
+                  multipleLine
+                  key={pack.packageName}
+                  onClick={() => {}}
+                  thumb={<Image
+                    source={{ uri: `data:image/png;base64,${pack.appIcon}` }}
+                    style={{
+                      width: 40,
+                      height: 40
+                    }} />}>
+                  {pack.appName}
+                  <List.Item.Brief>{pack.packageName}</List.Item.Brief>
+                </List.Item>
+              ))
+            }
+          </List>
+          <List renderHeader={<Text>System</Text>}>
+            {
+              this.state.packageList
+              .filter(p => p.systemApp)
+              .sort((x, y) => (x.appName.localeCompare(y.appName)))
+              .map(pack => (
+                <List.Item
+                  multipleLine
+                  key={pack.packageName}
+                  onClick={() => {}}
+                  thumb={<Image
+                    source={{ uri: `data:image/png;base64,${pack.appIcon}` }}
+                    style={{
+                      width: 40,
+                      height: 40
+                    }} />}>
+                  {pack.appName}
+                  <List.Item.Brief>{pack.packageName}</List.Item.Brief>
+                </List.Item>
+              ))
+            }
+          </List>
+        </ScrollView>
       </View>
     );
   }
