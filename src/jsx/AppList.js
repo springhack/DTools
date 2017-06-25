@@ -1,13 +1,15 @@
 /**
         Author: SpringHack - springhack@live.cn
-        Last modified: 2017-06-25 15:58:12
+        Last modified: 2017-06-25 22:38:23
         Filename: AppList.js
         Description: Created by SpringHack using vim automatically.
 **/
 import React, { Component } from 'react';
 import { observer } from 'mobx-react';
-import { NativeModules, ScrollView, Image, View, Text } from 'react-native';
-import { List } from 'antd-mobile';
+import { NativeModules, ScrollView, View, Text } from 'react-native';
+import { RefreshControl, ActivityIndicator, List } from 'antd-mobile';
+
+import AppIcon from './AppIcon';
 
 import style from '../style';
 
@@ -27,59 +29,62 @@ class AppList extends Component {
   }
   async updatePackageList() {
     const { DeviceOwnerManager } = NativeModules;
-    this.setState({
-      packageList: await DeviceOwnerManager.getPackageList()
+    const packageList = await DeviceOwnerManager.getPackageList();
+    packageList.sort((x, y) => {
+      if (x.systemApp ^ y.systemApp) {
+        return (x.systemApp ? 1 : -1);
+      }
+      return x.appName.localeCompare(y.appName);
     });
+    this.setState({ packageList });
   }
   render() {
+    let i = 0;
+    const userApp = [];
+    const systemApp = [];
+    while (i < this.state.packageList.length && !this.state.packageList[i].systemApp) {
+      userApp.push(
+        <List.Item
+          multipleLine
+          key={this.state.packageList[i].packageName}
+          onClick={() => {}}
+          thumb={<AppIcon packageName={this.state.packageList[i].packageName} />}>
+          {this.state.packageList[i].appName}
+          <List.Item.Brief>{this.state.packageList[i].packageName}</List.Item.Brief>
+        </List.Item>
+      );
+      ++i;
+    }
+    while (i < this.state.packageList.length && this.state.packageList[i].systemApp) {
+      systemApp.push(
+        <List.Item
+          multipleLine
+          key={this.state.packageList[i].packageName}
+          onClick={() => {}}
+          thumb={<AppIcon packageName={this.state.packageList[i].packageName} />}>
+          {this.state.packageList[i].appName}
+          <List.Item.Brief>{this.state.packageList[i].packageName}</List.Item.Brief>
+        </List.Item>
+      );
+      ++i;
+    }
     return (
       <View style={style.outer}>
-        <ScrollView>
-          <List renderHeader={<Text>User</Text>}>
-            {
-              this.state.packageList
-              .filter(p => !p.systemApp)
-              .sort((x, y) => (x.appName.localeCompare(y.appName)))
-              .map(pack => (
-                <List.Item
-                  multipleLine
-                  key={pack.packageName}
-                  onClick={() => {}}
-                  thumb={<Image
-                    source={{ uri: `data:image/png;base64,${pack.appIcon}` }}
-                    style={{
-                      width: 40,
-                      height: 40
-                    }} />}>
-                  {pack.appName}
-                  <List.Item.Brief>{pack.packageName}</List.Item.Brief>
-                </List.Item>
-              ))
-            }
-          </List>
-          <List renderHeader={<Text>System</Text>}>
-            {
-              this.state.packageList
-              .filter(p => p.systemApp)
-              .sort((x, y) => (x.appName.localeCompare(y.appName)))
-              .map(pack => (
-                <List.Item
-                  multipleLine
-                  key={pack.packageName}
-                  onClick={() => {}}
-                  thumb={<Image
-                    source={{ uri: `data:image/png;base64,${pack.appIcon}` }}
-                    style={{
-                      width: 40,
-                      height: 40
-                    }} />}>
-                  {pack.appName}
-                  <List.Item.Brief>{pack.packageName}</List.Item.Brief>
-                </List.Item>
-              ))
-            }
-          </List>
-        </ScrollView>
+        {
+          this.state.packageList.length ? (
+            <ScrollView
+              refreshControl={<RefreshControl
+                refreshing={false}
+                onRefresh={() => this.updatePackageList()} />}>
+              <List renderHeader={<Text>User</Text>}>
+                {userApp}
+              </List>
+              <List renderHeader={<Text>System</Text>}>
+                {systemApp}
+              </List>
+            </ScrollView>
+          ) : (<ActivityIndicator toast text='Loading...' />)
+        }
       </View>
     );
   }

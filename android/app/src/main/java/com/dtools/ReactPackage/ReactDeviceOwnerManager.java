@@ -1,9 +1,12 @@
 package com.dtools.ReactPackage;
 
+import android.app.admin.*;
+import android.content.*;
 import android.content.pm.*;
 import com.facebook.react.bridge.*;
 import java.util.*;
 import com.dtools.Utils.*;
+import com.dtools.DeviceOwner.*;
 
 public class ReactDeviceOwnerManager extends ReactContextBaseJavaModule {
 
@@ -25,6 +28,16 @@ public class ReactDeviceOwnerManager extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void isDeviceOwner(Promise promise) {
+        try {
+            DevicePolicyManager manager = (DevicePolicyManager) getReactApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
+            promise.resolve(manager.isDeviceOwnerApp(getReactApplicationContext().getPackageName()));
+        } catch (Exception e) {
+            promise.reject(e);
+        }
+    }
+
+    @ReactMethod
     public void getPackageList(Promise promise) {
         // getReactApplicationContext()
         try {
@@ -34,8 +47,8 @@ public class ReactDeviceOwnerManager extends ReactContextBaseJavaModule {
                 WritableMap map = Arguments.createMap();
                 map.putString("packageName", p.packageName);
                 map.putString("appName", p.applicationInfo.loadLabel(getReactApplicationContext().getPackageManager()).toString());
-                map.putString("appIcon", ReactDrawable.drawableToBase64(p.applicationInfo.loadIcon(getReactApplicationContext().getPackageManager())));
                 map.putBoolean("systemApp", 0 < (p.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM));
+                map.putBoolean("enables", p.applicationInfo.enabled);
                 array.pushMap(map);
             }
             promise.resolve(array);
@@ -45,20 +58,32 @@ public class ReactDeviceOwnerManager extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setPackageHideState(Promise promise) {
+    public void getAppIcon(String packageName, Promise promise) {
         try {
-            promise.resolve(true);
-            // TODO
+            ApplicationInfo info = getReactApplicationContext().getPackageManager().getApplicationInfo(packageName, 0);
+            promise.resolve(ReactDrawable.drawableToBase64(info.loadIcon(getReactApplicationContext().getPackageManager())));
         } catch (Exception e) {
             promise.reject(e);
         }
     }
 
     @ReactMethod
-    public void getPackageHideState(Promise promise) {
+    public void setPackageHideState(String packageName, boolean hidden, Promise promise) {
         try {
-            promise.resolve(true);
-            // TODO
+            DevicePolicyManager manager = (DevicePolicyManager) getReactApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
+            ComponentName componentName = DeviceOwnerReceiver.getComponentName(getReactApplicationContext());
+            boolean result = manager.setApplicationHidden(componentName, packageName, hidden);
+            promise.resolve(result);
+        } catch (Exception e) {
+            promise.reject(e);
+        }
+    }
+
+    @ReactMethod
+    public void getPackageHideState(String packageName, Promise promise) {
+        try {
+            ApplicationInfo info = getReactApplicationContext().getPackageManager().getApplicationInfo(packageName, 0);
+            promise.resolve(info.enabled);
         } catch (Exception e) {
             promise.reject(e);
         }
