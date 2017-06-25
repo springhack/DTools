@@ -1,18 +1,21 @@
 /**
         Author: SpringHack - springhack@live.cn
-        Last modified: 2017-06-25 12:22:30
-        Filename: App.js
+        Last modified: 2017-06-25 15:58:12
+        Filename: AppList.js
         Description: Created by SpringHack using vim automatically.
 **/
 import React, { Component } from 'react';
 import { observer } from 'mobx-react';
-import { NativeModules, AppRegistry, ScrollView, Image, View, Text } from 'react-native';
+import { NativeModules, ScrollView, Image, View, Text } from 'react-native';
 import { List } from 'antd-mobile';
 
 import style from '../style';
 
 @observer
-class App extends Component {
+class AppList extends Component {
+  static navigationOptions = {
+    title: 'App List'
+  }
   constructor(props) {
     super(props);
     this.state = {
@@ -82,4 +85,4 @@ class App extends Component {
   }
 }
 
-AppRegistry.registerComponent('DTools', () => App);
+export default AppList;
