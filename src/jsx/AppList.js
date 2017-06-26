@@ -1,6 +1,6 @@
 /**
         Author: SpringHack - springhack@live.cn
-        Last modified: 2017-06-25 22:38:23
+        Last modified: 2017-06-26 10:12:43
         Filename: AppList.js
         Description: Created by SpringHack using vim automatically.
 **/
@@ -10,6 +10,7 @@ import { NativeModules, ScrollView, View, Text } from 'react-native';
 import { RefreshControl, ActivityIndicator, List } from 'antd-mobile';
 
 import AppIcon from './AppIcon';
+import AppOperation from './AppOperation';
 
 import style from '../style';
 
@@ -38,34 +39,31 @@ class AppList extends Component {
     });
     this.setState({ packageList });
   }
+  makeListItem(i) {
+    return (
+      <List.Item
+        multipleLine
+        key={this.state.packageList[i].packageName}
+        extra={
+          <AppOperation
+            packageInfo={this.state.packageList[i]} />
+        }
+        thumb={<AppIcon packageName={this.state.packageList[i].packageName} />}>
+        {this.state.packageList[i].appName}
+        <List.Item.Brief>{this.state.packageList[i].packageName}</List.Item.Brief>
+      </List.Item>
+    );
+  }
   render() {
     let i = 0;
     const userApp = [];
     const systemApp = [];
     while (i < this.state.packageList.length && !this.state.packageList[i].systemApp) {
-      userApp.push(
-        <List.Item
-          multipleLine
-          key={this.state.packageList[i].packageName}
-          onClick={() => {}}
-          thumb={<AppIcon packageName={this.state.packageList[i].packageName} />}>
-          {this.state.packageList[i].appName}
-          <List.Item.Brief>{this.state.packageList[i].packageName}</List.Item.Brief>
-        </List.Item>
-      );
+      userApp.push(this.makeListItem(i));
       ++i;
     }
     while (i < this.state.packageList.length && this.state.packageList[i].systemApp) {
-      systemApp.push(
-        <List.Item
-          multipleLine
-          key={this.state.packageList[i].packageName}
-          onClick={() => {}}
-          thumb={<AppIcon packageName={this.state.packageList[i].packageName} />}>
-          {this.state.packageList[i].appName}
-          <List.Item.Brief>{this.state.packageList[i].packageName}</List.Item.Brief>
-        </List.Item>
-      );
+      systemApp.push(this.makeListItem(i));
       ++i;
     }
     return (

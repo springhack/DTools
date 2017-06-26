@@ -3,10 +3,15 @@ package com.dtools.ReactPackage;
 import android.app.admin.*;
 import android.content.*;
 import android.content.pm.*;
+import android.os.Build;
+import android.provider.SyncStateContract;
 import com.facebook.react.bridge.*;
+
+import java.io.*;
 import java.util.*;
 import com.dtools.Utils.*;
 import com.dtools.DeviceOwner.*;
+
 
 public class ReactDeviceOwnerManager extends ReactContextBaseJavaModule {
 
@@ -22,8 +27,8 @@ public class ReactDeviceOwnerManager extends ReactContextBaseJavaModule {
     @Override
     public Map<String, Object> getConstants() {
         final Map<String, Object> constants = new HashMap<>();
-        constants.put("HIDE", true);
-        constants.put("UNHIDE", false);
+        constants.put("UNHIDE", true);
+        constants.put("HIDE", false);
         return constants;
     }
 
@@ -39,16 +44,17 @@ public class ReactDeviceOwnerManager extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getPackageList(Promise promise) {
-        // getReactApplicationContext()
         try {
-            List<PackageInfo> packs = getReactApplicationContext().getPackageManager().getInstalledPackages(0);
+            List<ApplicationInfo> apps = getReactApplicationContext().getPackageManager().getInstalledApplications(PackageManager.GET_UNINSTALLED_PACKAGES);
+            DevicePolicyManager manager = (DevicePolicyManager) getReactApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
+            ComponentName componentName = DeviceOwnerReceiver.getComponentName(getReactApplicationContext());
             WritableArray array = Arguments.createArray();
-            for (PackageInfo p:packs) {
+            for (ApplicationInfo app:apps) {
                 WritableMap map = Arguments.createMap();
-                map.putString("packageName", p.packageName);
-                map.putString("appName", p.applicationInfo.loadLabel(getReactApplicationContext().getPackageManager()).toString());
-                map.putBoolean("systemApp", 0 < (p.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM));
-                map.putBoolean("enables", p.applicationInfo.enabled);
+                map.putString("packageName", app.packageName);
+                map.putString("appName", app.loadLabel(getReactApplicationContext().getPackageManager()).toString());
+                map.putBoolean("systemApp", 0 < (app.flags & ApplicationInfo.FLAG_SYSTEM));
+                map.putBoolean("enabled", !manager.isApplicationHidden(componentName, app.packageName));
                 array.pushMap(map);
             }
             promise.resolve(array);
@@ -60,7 +66,7 @@ public class ReactDeviceOwnerManager extends ReactContextBaseJavaModule {
     @ReactMethod
     public void getAppIcon(String packageName, Promise promise) {
         try {
-            ApplicationInfo info = getReactApplicationContext().getPackageManager().getApplicationInfo(packageName, 0);
+            ApplicationInfo info = getReactApplicationContext().getPackageManager().getApplicationInfo(packageName, PackageManager.GET_UNINSTALLED_PACKAGES);
             promise.resolve(ReactDrawable.drawableToBase64(info.loadIcon(getReactApplicationContext().getPackageManager())));
         } catch (Exception e) {
             promise.reject(e);
@@ -72,7 +78,7 @@ public class ReactDeviceOwnerManager extends ReactContextBaseJavaModule {
         try {
             DevicePolicyManager manager = (DevicePolicyManager) getReactApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
             ComponentName componentName = DeviceOwnerReceiver.getComponentName(getReactApplicationContext());
-            boolean result = manager.setApplicationHidden(componentName, packageName, hidden);
+            boolean result = manager.setApplicationHidden(componentName, packageName, !hidden);
             promise.resolve(result);
         } catch (Exception e) {
             promise.reject(e);
@@ -82,8 +88,10 @@ public class ReactDeviceOwnerManager extends ReactContextBaseJavaModule {
     @ReactMethod
     public void getPackageHideState(String packageName, Promise promise) {
         try {
-            ApplicationInfo info = getReactApplicationContext().getPackageManager().getApplicationInfo(packageName, 0);
-            promise.resolve(info.enabled);
+            DevicePolicyManager manager = (DevicePolicyManager) getReactApplicationContext().getSystemService(Context.DEVICE_POLICY_SERVICE);
+            ComponentName componentName = DeviceOwnerReceiver.getComponentName(getReactApplicationContext());
+            boolean result = manager.isApplicationHidden(componentName, packageName);
+            promise.resolve(result);
         } catch (Exception e) {
             promise.reject(e);
         }

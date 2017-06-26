@@ -1,6 +1,6 @@
 /**
         Author: SpringHack - springhack@live.cn
-        Last modified: 2017-06-25 20:19:38
+        Last modified: 2017-06-26 09:32:11
         Filename: AppIcon.js
         Description: Created by SpringHack using vim automatically.
 **/
@@ -13,11 +13,14 @@ export default class AppIcon extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      uri: ''
+      uri: 'ic_launcher'
     };
   }
   componentDidMount() {
-    this.updateIcon();
+    // Make this happend next eventLoop
+    setTimeout(() => {
+      this.updateIcon();
+    }, 0);
   }
   async updateIcon() {
     const { DeviceOwnerManager } = NativeModules;
