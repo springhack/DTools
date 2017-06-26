@@ -3,16 +3,14 @@ package com.dtools.ReactPackage;
 import android.app.admin.*;
 import android.content.*;
 import android.content.pm.*;
-import android.os.Build;
-import android.provider.SyncStateContract;
 import com.facebook.react.bridge.*;
-
-import java.io.*;
 import java.util.*;
 import com.dtools.Utils.*;
 import com.dtools.DeviceOwner.*;
 
 
+
+// dpm set-device-owner com.springhack.dtools/com.dtools.DeviceOwner.DeviceOwnerReceiver
 public class ReactDeviceOwnerManager extends ReactContextBaseJavaModule {
 
     public ReactDeviceOwnerManager(ReactApplicationContext reactContext) {
